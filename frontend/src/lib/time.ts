@@ -1,4 +1,4 @@
-import { format, isSameDay, parseISO } from "date-fns";
+import { format, isSameDay, parse, parseISO } from "date-fns";
 
 import { isClosed } from "@/lib/status";
 import type { Lead } from "@/lib/types";
@@ -10,6 +10,7 @@ export type GroupedLeads = Record<FollowUpGroup, Lead[]>;
 const MS_PER_MINUTE = 60_000;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
+const FOLLOW_UP_TOLERANCE_MS = MS_PER_MINUTE;
 
 function plural(count: number, unit: string): string {
   return `${count} ${unit}${count === 1 ? "" : "s"} ago`;
@@ -75,4 +76,20 @@ export function formatFollowUpLabel(
   if (group === "today") return `Follow-up today at ${time}`;
   if (group === "overdue") return `Overdue: was due ${date} at ${time}`;
   return `Follow-up ${date} at ${time}`;
+}
+
+export function combineLocalDateTime(dateStr: string, timeStr: string): Date {
+  return parse(`${dateStr} ${timeStr}`, "yyyy-MM-dd HH:mm", new Date(0));
+}
+
+export function formatTimelineStamp(iso: string): string {
+  return format(parseISO(iso), "MMM d, h:mm a");
+}
+
+export function formatFollowUpChip(iso: string): string {
+  return formatTimelineStamp(iso);
+}
+
+export function isFollowUpInPast(date: Date, now: Date): boolean {
+  return date.getTime() < now.getTime() - FOLLOW_UP_TOLERANCE_MS;
 }

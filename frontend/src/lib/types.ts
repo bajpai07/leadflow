@@ -18,3 +18,21 @@ export type Lead = {
   created_at: string;
   updated_at: string;
 };
+
+export type Discussion = {
+  id: number;
+  lead_id: number;
+  note: string;
+  follow_up_at: string | null;
+  created_at: string;
+};
+
+export type DiscussionCreateInput = {
+  note: string;
+  follow_up_at?: string;
+};
+
+export type DiscussionCreateResult = {
+  discussion: Discussion;
+  lead: Lead;
+};

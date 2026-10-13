@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { formatFollowUpLabel, groupLeads, timeAgo } from "@/lib/time";
+import {
+  combineLocalDateTime,
+  formatFollowUpChip,
+  formatFollowUpLabel,
+  formatTimelineStamp,
+  groupLeads,
+  isFollowUpInPast,
+  timeAgo,
+} from "@/lib/time";
 import type { Lead } from "@/lib/types";
 
 const MINUTE = 60_000;
@@ -169,5 +177,41 @@ describe("formatFollowUpLabel", () => {
   it.each(["won", "lost"] as const)("returns null for a %s lead", (status) => {
     const lead = makeLead({ status, next_follow_up_at: "2026-10-15T08:30:00Z" });
     expect(formatFollowUpLabel(lead, "rest")).toBeNull();
+  });
+});
+
+describe("combineLocalDateTime", () => {
+  it("combines a local date and time in the browser timezone", () => {
+    expect(combineLocalDateTime("2026-10-14", "10:30").toISOString()).toBe(
+      "2026-10-14T05:00:00.000Z",
+    );
+  });
+
+  it("returns an invalid date for malformed input", () => {
+    expect(Number.isNaN(combineLocalDateTime("", "10:30").getTime())).toBe(true);
+  });
+});
+
+describe("timeline formatting", () => {
+  it("formats the timeline stamp in local time", () => {
+    expect(formatTimelineStamp("2026-05-04T05:00:00Z")).toBe("May 4, 10:30 AM");
+  });
+
+  it("formats the follow-up chip in local time", () => {
+    expect(formatFollowUpChip("2026-05-06T08:30:00Z")).toBe("May 6, 2:00 PM");
+  });
+});
+
+describe("isFollowUpInPast", () => {
+  it("allows a follow-up exactly 60 seconds in the past", () => {
+    expect(isFollowUpInPast(new Date(NOW.getTime() - 60_000), NOW)).toBe(false);
+  });
+
+  it("rejects a follow-up 61 seconds in the past", () => {
+    expect(isFollowUpInPast(new Date(NOW.getTime() - 61_000), NOW)).toBe(true);
+  });
+
+  it("allows a future follow-up", () => {
+    expect(isFollowUpInPast(new Date(NOW.getTime() + 60_000), NOW)).toBe(false);
   });
 });

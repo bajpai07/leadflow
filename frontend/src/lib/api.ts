@@ -1,4 +1,10 @@
-import type { Lead, LeadStatus } from "@/lib/types";
+import type {
+  Discussion,
+  DiscussionCreateInput,
+  DiscussionCreateResult,
+  Lead,
+  LeadStatus,
+} from "@/lib/types";
 
 const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
@@ -17,6 +23,8 @@ export class ApiError extends Error {
     this.detail = detail;
   }
 }
+
+type RequestInit = { method: "POST" | "PATCH"; body: unknown };
 
 function isErrorBody(body: unknown): body is { detail: string; code: string } {
   return (
@@ -45,11 +53,16 @@ async function toApiError(response: Response): Promise<ApiError> {
   );
 }
 
-async function request<T>(path: string): Promise<T> {
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
-      headers: { Accept: "application/json" },
+      method: init?.method ?? "GET",
+      headers: {
+        Accept: "application/json",
+        ...(init ? { "Content-Type": "application/json" } : {}),
+      },
+      body: init ? JSON.stringify(init.body) : undefined,
     });
   } catch {
     throw new ApiError(0, "network_error", "Cannot reach the server");
@@ -63,4 +76,29 @@ async function request<T>(path: string): Promise<T> {
 export function fetchLeads(status?: LeadStatus): Promise<Lead[]> {
   const query = status ? `?status=${encodeURIComponent(status)}` : "";
   return request<Lead[]>(`/leads${query}`);
+}
+
+export function fetchLead(id: number): Promise<Lead> {
+  return request<Lead>(`/leads/${id}`);
+}
+
+export function fetchDiscussions(leadId: number): Promise<Discussion[]> {
+  return request<Discussion[]>(`/leads/${leadId}/discussions`);
+}
+
+export function createDiscussion(
+  leadId: number,
+  input: DiscussionCreateInput,
+): Promise<DiscussionCreateResult> {
+  return request<DiscussionCreateResult>(`/leads/${leadId}/discussions`, {
+    method: "POST",
+    body: input,
+  });
+}
+
+export function updateLeadStatus(
+  id: number,
+  status: LeadStatus,
+): Promise<Lead> {
+  return request<Lead>(`/leads/${id}`, { method: "PATCH", body: { status } });
 }
