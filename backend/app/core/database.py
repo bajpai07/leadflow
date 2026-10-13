@@ -1,6 +1,9 @@
 import sqlite3
 from collections.abc import Iterator
+from contextlib import contextmanager
+from typing import Annotated
 
+from fastapi import Depends
 from sqlalchemy import MetaData, create_engine, event
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
@@ -44,3 +47,16 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 def get_db() -> Iterator[Session]:
     with SessionLocal() as session:
         yield session
+
+
+DbSession = Annotated[Session, Depends(get_db)]
+
+
+@contextmanager
+def transaction(db: Session) -> Iterator[None]:
+    try:
+        yield
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
