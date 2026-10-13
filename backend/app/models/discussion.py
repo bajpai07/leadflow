@@ -19,6 +19,7 @@ class Discussion(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     lead_id: Mapped[int] = mapped_column(ForeignKey("leads.id", ondelete="CASCADE"))
     note: Mapped[str] = mapped_column(Text)
+    follow_up_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     created_at: Mapped[datetime] = mapped_column(
         UTCDateTime(), default=lambda: clock.utcnow(), server_default=func.now()
     )

@@ -33,7 +33,9 @@ def add_discussion(db: Session, lead_id: int, data: DiscussionCreate) -> Discuss
         raise FollowUpInPastError()
 
     with transaction(db):
-        discussion = Discussion(lead_id=lead.id, note=data.note, created_at=now)
+        discussion = Discussion(
+            lead_id=lead.id, note=data.note, follow_up_at=data.follow_up_at, created_at=now
+        )
         db.add(discussion)
         db.flush()
         lead.last_discussion_at = now

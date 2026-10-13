@@ -9,6 +9,8 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
+from app.core.database import create_db_engine
 from app.models import Discussion, Lead, LeadStatus
 
 
@@ -138,4 +140,54 @@ def test_schema_has_expected_indexes(engine: Engine) -> None:
 def test_migration_upgrade_downgrade_upgrade(alembic_config: Config) -> None:
     command.upgrade(alembic_config, "head")
     command.downgrade(alembic_config, "base")
+    command.upgrade(alembic_config, "head")
+
+
+def test_migration_0002_adds_and_removes_discussion_follow_up_at(
+    alembic_config: Config,
+) -> None:
+    engine = create_db_engine(get_settings().database_url)
+    try:
+        command.upgrade(alembic_config, "head")
+        columns = {c["name"] for c in inspect(engine).get_columns("discussions")}
+        assert "follow_up_at" in columns
+
+        command.downgrade(alembic_config, "0001")
+        columns = {c["name"] for c in inspect(engine).get_columns("discussions")}
+        assert "follow_up_at" not in columns
+    finally:
+        engine.dispose()
+
+
+def test_downgrade_to_0001_keeps_discussion_constraints_and_index(
+    alembic_config: Config,
+) -> None:
+    command.upgrade(alembic_config, "head")
+    command.downgrade(alembic_config, "0001")
+    engine = create_db_engine(get_settings().database_url)
+    try:
+        inspector = inspect(engine)
+        check_names = {c["name"] for c in inspector.get_check_constraints("discussions")}
+        foreign_keys = inspector.get_foreign_keys("discussions")
+        with engine.connect() as connection:
+            index_sql = connection.execute(
+                text("SELECT sql FROM sqlite_master WHERE name = :name"),
+                {"name": "ix_discussions_lead_id_created_at"},
+            ).scalar_one()
+
+        assert "ck_discussions_note_not_blank" in check_names
+        assert [fk["options"].get("ondelete") for fk in foreign_keys] == ["CASCADE"]
+        assert "lead_id, created_at DESC" in index_sql
+
+        with engine.begin() as connection:
+            connection.execute(text("INSERT INTO leads (name) VALUES ('Sarah Connor')"))
+            connection.execute(
+                text("INSERT INTO discussions (lead_id, note) VALUES (1, 'Lead created.')")
+            )
+            connection.execute(text("DELETE FROM leads WHERE id = 1"))
+            remaining = connection.execute(text("SELECT COUNT(*) FROM discussions")).scalar_one()
+        assert remaining == 0
+    finally:
+        engine.dispose()
+
     command.upgrade(alembic_config, "head")

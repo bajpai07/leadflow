@@ -44,7 +44,7 @@ docs/
 
 **Lead**: `id`, `name` (required), `company?`, `phone?`, `status` enum (`new`, `contacted`, `qualified`, `proposal_sent`, `won`, `lost`; default `new`), `next_follow_up_at?` (UTC), `last_discussion_at?` (UTC), `created_at`, `updated_at`.
 
-**Discussion**: `id`, `lead_id` (FK, ON DELETE CASCADE), `note` (required, non-empty after trim), `created_at` (UTC).
+**Discussion**: `id`, `lead_id` (FK, ON DELETE CASCADE), `note` (required, non-empty after trim), `follow_up_at?` (UTC, the follow-up requested when the note was logged), `created_at` (UTC).
 
 **Indexes**: `leads(status)`, `leads(next_follow_up_at)`, `discussions(lead_id, created_at DESC)`.
 
@@ -101,10 +101,11 @@ CORS only for the frontend origin from env.
 
 ## 9. Locked decisions
 
-Business rules 13 to 17 extend section 4 and carry the same authority.
+Business rules 13 to 18 extend section 4 and carry the same authority.
 
 13. Overdue takes priority over Today: a follow-up whose time has already passed today is Overdue, never in Today's Follow-ups. Today's group = `next_follow_up_at` is later today (local time) and not yet passed.
 14. The server tolerates 60 seconds of clock skew when validating that `follow_up_at` is not in the past.
 15. `PATCH /leads/{id}` accepts ONLY `name`, `company`, `phone`, `status`. Follow-up fields are never settable via PATCH.
 16. The system note text on lead creation is exactly "Lead created."
 17. `GET /leads` returns ALL matching leads (filtered by `status` and `q` only). Grouping into Overdue / Today / Rest is done by the frontend in the browser's timezone.
+18. `Discussion.follow_up_at` is the follow-up requested when that note was logged and is historical; `Lead.next_follow_up_at` is the only active reminder.

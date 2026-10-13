@@ -24,6 +24,7 @@ class DiscussionRead(BaseModel):
     id: int
     lead_id: int
     note: str
+    follow_up_at: datetime | None
     created_at: datetime
 
 

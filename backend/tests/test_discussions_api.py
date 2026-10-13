@@ -237,3 +237,55 @@ def test_failure_while_updating_lead_fields_leaves_no_trace(
 
     assert response.status_code == 500
     assert snapshot(engine, lead_id) == before
+
+
+def test_note_follow_up_is_returned_and_listed(
+    client: TestClient, create_lead: CreateLead, add_note: AddNote, frozen_clock: FrozenClock
+) -> None:
+    lead = create_lead()
+    frozen_clock.advance(hours=1)
+    follow_up = frozen_clock.now + timedelta(days=2)
+
+    result = add_note(lead["id"], "Sent pricing.", follow_up_at=iso(follow_up))
+    [newest, _] = client.get(f"/leads/{lead['id']}/discussions").json()
+
+    assert parse(result["discussion"]["follow_up_at"]) == follow_up
+    assert result["discussion"]["follow_up_at"].endswith("Z")
+    assert newest["follow_up_at"] == result["discussion"]["follow_up_at"]
+
+
+def test_note_without_follow_up_has_null_follow_up(
+    create_lead: CreateLead, add_note: AddNote
+) -> None:
+    lead = create_lead()
+
+    result = add_note(lead["id"], "Quick call.")
+
+    assert result["discussion"]["follow_up_at"] is None
+
+
+def test_lead_created_note_has_null_follow_up(client: TestClient, create_lead: CreateLead) -> None:
+    lead = create_lead()
+
+    [created_note] = client.get(f"/leads/{lead['id']}/discussions").json()
+
+    assert created_note["note"] == "Lead created."
+    assert created_note["follow_up_at"] is None
+
+
+def test_later_note_clears_active_reminder_but_keeps_historical_follow_up(
+    client: TestClient, create_lead: CreateLead, add_note: AddNote, frozen_clock: FrozenClock
+) -> None:
+    lead = create_lead()
+    frozen_clock.advance(hours=1)
+    follow_up = frozen_clock.now + timedelta(days=1)
+    add_note(lead["id"], "Set reminder.", follow_up_at=iso(follow_up))
+    frozen_clock.advance(hours=1)
+
+    result = add_note(lead["id"], "Handled it.")
+    discussions = client.get(f"/leads/{lead['id']}/discussions").json()
+    by_note = {d["note"]: d for d in discussions}
+
+    assert result["lead"]["next_follow_up_at"] is None
+    assert by_note["Handled it."]["follow_up_at"] is None
+    assert parse(by_note["Set reminder."]["follow_up_at"]) == follow_up
