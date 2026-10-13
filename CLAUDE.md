@@ -98,3 +98,13 @@ CORS only for the frontend origin from env.
 ## 8. UI spec
 
 `docs/wireframes/README.md` is the visual source of truth. The wireframes are "suggested", so improving them is allowed, but every element listed there must exist.
+
+## 9. Locked decisions
+
+Business rules 13 to 17 extend section 4 and carry the same authority.
+
+13. Overdue takes priority over Today: a follow-up whose time has already passed today is Overdue, never in Today's Follow-ups. Today's group = `next_follow_up_at` is later today (local time) and not yet passed.
+14. The server tolerates 60 seconds of clock skew when validating that `follow_up_at` is not in the past.
+15. `PATCH /leads/{id}` accepts ONLY `name`, `company`, `phone`, `status`. Follow-up fields are never settable via PATCH.
+16. The system note text on lead creation is exactly "Lead created."
+17. `GET /leads` returns ALL matching leads (filtered by `status` and `q` only). Grouping into Overdue / Today / Rest is done by the frontend in the browser's timezone.
