@@ -6,9 +6,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Enum, Index, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core import clock
 from app.core.database import Base
 from app.models.enums import LeadStatus
-from app.models.types import UTCDateTime, utcnow
+from app.models.types import UTCDateTime
 
 if TYPE_CHECKING:
     from app.models.discussion import Discussion
@@ -40,10 +41,13 @@ class Lead(Base):
     next_follow_up_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     last_discussion_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     created_at: Mapped[datetime] = mapped_column(
-        UTCDateTime(), default=utcnow, server_default=func.now()
+        UTCDateTime(), default=lambda: clock.utcnow(), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        UTCDateTime(), default=utcnow, onupdate=utcnow, server_default=func.now()
+        UTCDateTime(),
+        default=lambda: clock.utcnow(),
+        onupdate=lambda: clock.utcnow(),
+        server_default=func.now(),
     )
 
     discussions: Mapped[list[Discussion]] = relationship(

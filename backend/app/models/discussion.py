@@ -5,9 +5,10 @@ from datetime import datetime
 from sqlalchemy import CheckConstraint, ForeignKey, Index, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core import clock
 from app.core.database import Base
 from app.models.lead import Lead
-from app.models.types import UTCDateTime, utcnow
+from app.models.types import UTCDateTime
 
 
 class Discussion(Base):
@@ -19,7 +20,7 @@ class Discussion(Base):
     lead_id: Mapped[int] = mapped_column(ForeignKey("leads.id", ondelete="CASCADE"))
     note: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
-        UTCDateTime(), default=utcnow, server_default=func.now()
+        UTCDateTime(), default=lambda: clock.utcnow(), server_default=func.now()
     )
 
     lead: Mapped[Lead] = relationship(back_populates="discussions")
