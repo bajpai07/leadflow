@@ -1,11 +1,17 @@
 "use client";
 
+import { useState } from "react";
+
 import { LeadList } from "@/components/leads/LeadList";
+import { StatusFilter } from "@/components/leads/StatusFilter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api";
 import { useLeads } from "@/lib/queries";
+import { STATUS_CONFIG } from "@/lib/status";
 import { groupLeads } from "@/lib/time";
+import type { LeadStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { useNow } from "@/lib/useNow";
 
 function LeadListSkeleton() {
@@ -45,26 +51,64 @@ function LeadListError({
   );
 }
 
+function EmptyState({
+  status,
+  onShowAll,
+}: {
+  status: LeadStatus | undefined;
+  onShowAll: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500">
+      {status ? (
+        <>
+          <p>No {STATUS_CONFIG[status].label} leads.</p>
+          <Button variant="outline" onClick={onShowAll}>
+            Show all
+          </Button>
+        </>
+      ) : (
+        <p>No leads yet. Add your first lead.</p>
+      )}
+    </div>
+  );
+}
+
 export function LeadBoard() {
   const now = useNow();
-  const { data, error, refetch } = useLeads();
+  const [status, setStatus] = useState<LeadStatus | undefined>(undefined);
+  const { data, error, refetch, isPlaceholderData } = useLeads(status);
 
-  if (error && !data) {
-    return <LeadListError error={error} onRetry={() => void refetch()} />;
-  }
-  if (!data || now === null) {
-    return <LeadListSkeleton />;
-  }
+  const content = (() => {
+    if (error && !data) {
+      return <LeadListError error={error} onRetry={() => void refetch()} />;
+    }
+    if (!data || now === null) {
+      return <LeadListSkeleton />;
+    }
+    return (
+      <LeadList
+        groups={groupLeads(data, now)}
+        now={now}
+        emptyState={
+          <EmptyState status={status} onShowAll={() => setStatus(undefined)} />
+        }
+      />
+    );
+  })();
 
   return (
-    <LeadList
-      groups={groupLeads(data, now)}
-      now={now}
-      emptyState={
-        <p className="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500">
-          No leads yet. Add your first lead.
-        </p>
-      }
-    />
+    <div className="flex flex-col gap-6">
+      <StatusFilter selected={status} onChange={setStatus} />
+      <div
+        aria-busy={isPlaceholderData}
+        className={cn(
+          "transition-opacity",
+          isPlaceholderData && "opacity-60",
+        )}
+      >
+        {content}
+      </div>
+    </div>
   );
 }
