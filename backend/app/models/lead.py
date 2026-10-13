@@ -50,5 +50,5 @@ class Lead(Base):
         back_populates="lead",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        order_by=lambda: (Discussion.created_at.desc(), Discussion.id.desc()),
+        order_by="Discussion.created_at.desc(), Discussion.id.desc()",
     )
