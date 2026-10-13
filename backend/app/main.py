@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import leads
+from app.api import discussions, leads
 from app.core.config import get_settings
 from app.core.handlers import register_handlers
 
@@ -15,6 +15,7 @@ app.add_middleware(
 )
 register_handlers(app)
 app.include_router(leads.router)
+app.include_router(discussions.router)
 
 
 @app.get("/health")
