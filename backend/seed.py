@@ -213,6 +213,7 @@ def run(session: Session, now: datetime, reset: bool = False) -> int:
     with transaction(session):
         if reset:
             session.execute(delete(Lead))
+            session.expunge_all()
         leads = seed(session, now)
     _print_summary(leads, now)
     return 0
