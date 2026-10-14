@@ -16,6 +16,7 @@ import type { LeadStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useNow } from "@/lib/useNow";
+import { viewState } from "@/lib/viewState";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -78,13 +79,15 @@ export function LeadBoard() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
   const query = debouncedSearch.trim();
-  const { data, error, refetch, isPlaceholderData, isFetching } = useLeads({
-    status,
-    q: query,
-  });
+  const { data, error, refetch, isPlaceholderData, isFetching, isPending } =
+    useLeads({
+      status,
+      q: query,
+    });
+  const state = viewState(data, error, isPending);
 
   const content = (() => {
-    if (error && !data) {
+    if (state === "error" && error) {
       return <ErrorNotice error={error} onRetry={() => void refetch()} />;
     }
     if (!data || now === null) {

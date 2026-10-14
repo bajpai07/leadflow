@@ -113,7 +113,11 @@ export function LeadTimelineDialog({
           {error && !lead ? (
             <ErrorNotice error={error} onRetry={() => void refetch()} />
           ) : (
-            <TimelineList leadId={leadId} now={now} />
+            <TimelineList
+              leadId={leadId}
+              now={now}
+              suppressRefreshNotice={statusError !== null}
+            />
           )}
         </div>
         <div className="max-h-[50vh] shrink-0 overflow-y-auto border-t border-gray-200 bg-gray-50 p-4">
