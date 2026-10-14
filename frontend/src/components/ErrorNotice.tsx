@@ -15,7 +15,7 @@ export function ErrorNotice({ error, onRetry }: ErrorNoticeProps) {
       role="alert"
       className="flex flex-col items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
     >
-      <p>{message}</p>
+      <p className="max-w-full break-words [overflow-wrap:anywhere]">{message}</p>
       <Button variant="outline" onClick={onRetry}>
         Retry
       </Button>

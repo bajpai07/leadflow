@@ -50,7 +50,9 @@ function EmptyState({
     <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-600">
       {query ? (
         <>
-          <p>No leads match &quot;{query}&quot;.</p>
+          <p className="max-w-full break-words [overflow-wrap:anywhere]">
+            No leads match &quot;{query}&quot;.
+          </p>
           <Button variant="outline" onClick={onClearFilters}>
             Clear filters
           </Button>

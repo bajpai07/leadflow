@@ -20,7 +20,7 @@ export function TimelineItem({
   const isSystemNote = discussion.note === SYSTEM_NOTE;
 
   return (
-    <li className="relative pb-6 pl-8 last:pb-0">
+    <li className="relative min-w-0 pb-6 pl-8 last:pb-0">
       {isLast ? null : (
         <span
           aria-hidden
@@ -42,10 +42,10 @@ export function TimelineItem({
           ({timeAgo(discussion.created_at, now)})
         </span>
       </p>
-      <div className="mt-1.5 flex flex-col items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
+      <div className="mt-1.5 flex min-w-0 flex-col items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
         <p
           className={cn(
-            "whitespace-pre-wrap",
+            "max-w-full min-w-0 break-words whitespace-pre-wrap [overflow-wrap:anywhere]",
             isSystemNote && "text-gray-600 italic",
           )}
         >

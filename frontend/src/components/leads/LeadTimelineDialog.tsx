@@ -56,7 +56,7 @@ export function LeadTimelineDialog({
           <div className="min-w-0">
             {lead ? (
               <>
-                <DialogTitle className="text-lg leading-tight font-bold text-gray-900">
+                <DialogTitle className="text-lg leading-tight font-bold break-words text-gray-900 [overflow-wrap:anywhere]">
                   {lead.name}
                   {lead.company ? (
                     <span className="ml-1.5 font-normal text-gray-500">
@@ -65,7 +65,7 @@ export function LeadTimelineDialog({
                   ) : null}
                 </DialogTitle>
                 {lead.phone ? (
-                  <DialogDescription className="mt-1">
+                  <DialogDescription className="mt-1 break-words [overflow-wrap:anywhere]">
                     <span aria-hidden>📞 </span>
                     {lead.phone}
                   </DialogDescription>
