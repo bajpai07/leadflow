@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 
+import { ErrorNotice } from "@/components/ErrorNotice";
 import { LeadList } from "@/components/leads/LeadList";
+import { LeadTimelineDialog } from "@/components/leads/LeadTimelineDialog";
 import { StatusFilter } from "@/components/leads/StatusFilter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError } from "@/lib/api";
 import { useLeads } from "@/lib/queries";
 import { STATUS_CONFIG } from "@/lib/status";
 import { groupLeads } from "@/lib/time";
@@ -24,29 +25,6 @@ function LeadListSkeleton() {
       <Skeleton className="h-24 w-full rounded-xl" />
       <Skeleton className="h-24 w-full rounded-xl" />
       <Skeleton className="h-24 w-full rounded-xl" />
-    </div>
-  );
-}
-
-function LeadListError({
-  error,
-  onRetry,
-}: {
-  error: Error;
-  onRetry: () => void;
-}) {
-  const message =
-    error instanceof ApiError ? error.detail : "Something went wrong";
-
-  return (
-    <div
-      role="alert"
-      className="flex flex-col items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-    >
-      <p>{message}</p>
-      <Button variant="outline" onClick={onRetry}>
-        Retry
-      </Button>
     </div>
   );
 }
@@ -77,11 +55,12 @@ function EmptyState({
 export function LeadBoard() {
   const now = useNow();
   const [status, setStatus] = useState<LeadStatus | undefined>(undefined);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const { data, error, refetch, isPlaceholderData } = useLeads(status);
 
   const content = (() => {
     if (error && !data) {
-      return <LeadListError error={error} onRetry={() => void refetch()} />;
+      return <ErrorNotice error={error} onRetry={() => void refetch()} />;
     }
     if (!data || now === null) {
       return <LeadListSkeleton />;
@@ -90,6 +69,7 @@ export function LeadBoard() {
       <LeadList
         groups={groupLeads(data, now)}
         now={now}
+        onSelect={(lead) => setSelectedId(lead.id)}
         emptyState={
           <EmptyState status={status} onShowAll={() => setStatus(undefined)} />
         }
@@ -102,13 +82,17 @@ export function LeadBoard() {
       <StatusFilter selected={status} onChange={setStatus} />
       <div
         aria-busy={isPlaceholderData}
-        className={cn(
-          "transition-opacity",
-          isPlaceholderData && "opacity-60",
-        )}
+        className={cn("transition-opacity", isPlaceholderData && "opacity-60")}
       >
         {content}
       </div>
+      {selectedId !== null && now !== null ? (
+        <LeadTimelineDialog
+          leadId={selectedId}
+          now={now}
+          onClose={() => setSelectedId(null)}
+        />
+      ) : null}
     </div>
   );
 }
