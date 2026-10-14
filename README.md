@@ -40,6 +40,8 @@ cp .env.example .env
 docker compose up --build
 ```
 
+If the build fails with a network error, rerun `docker compose up --build`.
+
 Then open:
 
 - Web app: http://localhost:3000
@@ -190,7 +192,7 @@ ruff check .
 ruff format --check .
 ```
 
-Frontend (from `frontend/`; 92 tests):
+Frontend (from `frontend/`; 98 tests):
 
 ```bash
 npm run lint
@@ -199,7 +201,7 @@ npm test
 npm run build
 ```
 
-Backend tests run against a migrated temporary SQLite database and cover the models, migrations (up, down, up), every endpoint, the error shape, CORS and the seed script. Frontend tests cover the pure time utilities (with the timezone forced to Asia/Kolkata), the cache helpers, the query-cache sync, the form schemas and the API client.
+Backend tests run against a migrated temporary SQLite database and cover the models, migrations (up, down, up), every endpoint, the error shape, CORS and the seed script. Frontend tests cover the pure time utilities (with the timezone forced to Asia/Kolkata), the cache helpers, the query-cache sync, the form schemas, the view-state helper and the API client.
 
 ## Project Structure
 
