@@ -1,8 +1,10 @@
 "use client";
 
 import { XIcon } from "lucide-react";
+import { useRef } from "react";
 
 import { ErrorNotice } from "@/components/ErrorNotice";
+import { AddNoteForm } from "@/components/leads/AddNoteForm";
 import { LeadStatusSelect } from "@/components/leads/LeadStatusSelect";
 import { TimelineList } from "@/components/leads/TimelineList";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ export function LeadTimelineDialog({
 }: LeadTimelineDialogProps) {
   const { data: lead, error, refetch } = useLead(leadId);
   const statusMutation = useUpdateStatus(leadId);
+  const timelineRef = useRef<HTMLDivElement>(null);
   const statusError = statusMutation.error
     ? statusMutation.error instanceof ApiError
       ? statusMutation.error.detail
@@ -98,12 +101,22 @@ export function LeadTimelineDialog({
             {statusError}
           </p>
         ) : null}
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <div
+          ref={timelineRef}
+          className="min-h-0 flex-1 overflow-y-auto px-5 py-4"
+        >
           {error && !lead ? (
             <ErrorNotice error={error} onRetry={() => void refetch()} />
           ) : (
             <TimelineList leadId={leadId} now={now} />
           )}
+        </div>
+        <div className="border-t border-gray-200 bg-gray-50 p-4">
+          <AddNoteForm
+            leadId={leadId}
+            now={now}
+            onSaved={() => timelineRef.current?.scrollTo({ top: 0 })}
+          />
         </div>
       </DialogContent>
     </Dialog>

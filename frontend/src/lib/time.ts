@@ -93,3 +93,7 @@ export function formatFollowUpChip(iso: string): string {
 export function isFollowUpInPast(date: Date, now: Date): boolean {
   return date.getTime() < now.getTime() - FOLLOW_UP_TOLERANCE_MS;
 }
+
+export function toDateInputValue(date: Date): string {
+  return format(date, "yyyy-MM-dd");
+}

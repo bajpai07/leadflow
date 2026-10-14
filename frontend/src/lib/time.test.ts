@@ -8,6 +8,7 @@ import {
   groupLeads,
   isFollowUpInPast,
   timeAgo,
+  toDateInputValue,
 } from "@/lib/time";
 import type { Lead } from "@/lib/types";
 
@@ -213,5 +214,11 @@ describe("isFollowUpInPast", () => {
 
   it("allows a future follow-up", () => {
     expect(isFollowUpInPast(new Date(NOW.getTime() + 60_000), NOW)).toBe(false);
+  });
+});
+
+describe("toDateInputValue", () => {
+  it("formats the local calendar date, not the UTC date", () => {
+    expect(toDateInputValue(new Date("2026-10-13T20:00:00Z"))).toBe("2026-10-14");
   });
 });
