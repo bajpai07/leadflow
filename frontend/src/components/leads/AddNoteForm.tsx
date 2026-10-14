@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -59,15 +59,20 @@ export function AddNoteForm({ leadId, now, onSaved }: AddNoteFormProps) {
     : null;
 
   const onSubmit = handleSubmit((values) => {
+    if (mutation.isPending) return;
     mutation.mutate(toCreateInput(values), {
       onSuccess: () => {
         toast.success("Note saved");
         reset(DEFAULT_VALUES);
         onSaved();
-        setFocus("note");
       },
     });
   });
+
+  const saved = mutation.isSuccess;
+  useEffect(() => {
+    if (saved) setFocus("note");
+  }, [saved, setFocus]);
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3">
@@ -143,8 +148,8 @@ export function AddNoteForm({ leadId, now, onSaved }: AddNoteFormProps) {
       <div className="flex justify-end">
         <Button
           type="submit"
-          disabled={mutation.isPending}
-          className="bg-gray-900 text-white hover:bg-gray-800"
+          aria-disabled={mutation.isPending || undefined}
+          className="bg-gray-900 text-white hover:bg-gray-800 aria-disabled:cursor-wait aria-disabled:opacity-50"
         >
           {mutation.isPending ? "Saving..." : "Save Note"}
         </Button>
