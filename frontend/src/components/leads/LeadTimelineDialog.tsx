@@ -108,7 +108,7 @@ export function LeadTimelineDialog({
         ) : null}
         <div
           ref={timelineRef}
-          className="min-h-0 flex-1 overflow-y-auto px-5 py-4"
+          className="min-h-[8rem] flex-1 overflow-y-auto px-5 py-4"
         >
           {error && !lead ? (
             <ErrorNotice error={error} onRetry={() => void refetch()} />
@@ -116,7 +116,7 @@ export function LeadTimelineDialog({
             <TimelineList leadId={leadId} now={now} />
           )}
         </div>
-        <div className="border-t border-gray-200 bg-gray-50 p-4">
+        <div className="max-h-[50vh] shrink-0 overflow-y-auto border-t border-gray-200 bg-gray-50 p-4">
           <AddNoteForm
             leadId={leadId}
             now={now}

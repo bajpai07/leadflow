@@ -81,6 +81,7 @@ export function AddNoteForm({ leadId, now, onSaved }: AddNoteFormProps) {
           rows={3}
           placeholder="Log a new discussion..."
           aria-label="New discussion note"
+          className="max-h-32 overflow-y-auto"
           aria-invalid={errors.note ? true : undefined}
           aria-describedby={errors.note ? "note-error" : undefined}
           {...register("note")}
