@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { LeadList } from "@/components/leads/LeadList";
 import { LeadTimelineDialog } from "@/components/leads/LeadTimelineDialog";
+import { SearchInput } from "@/components/leads/SearchInput";
 import { StatusFilter } from "@/components/leads/StatusFilter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +14,10 @@ import { STATUS_CONFIG } from "@/lib/status";
 import { groupLeads } from "@/lib/time";
 import type { LeadStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useNow } from "@/lib/useNow";
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 function LeadListSkeleton() {
   return (
@@ -29,16 +33,29 @@ function LeadListSkeleton() {
   );
 }
 
+type EmptyStateProps = {
+  status: LeadStatus | undefined;
+  query: string;
+  onShowAll: () => void;
+  onClearFilters: () => void;
+};
+
 function EmptyState({
   status,
+  query,
   onShowAll,
-}: {
-  status: LeadStatus | undefined;
-  onShowAll: () => void;
-}) {
+  onClearFilters,
+}: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500">
-      {status ? (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-600">
+      {query ? (
+        <>
+          <p>No leads match &quot;{query}&quot;.</p>
+          <Button variant="outline" onClick={onClearFilters}>
+            Clear filters
+          </Button>
+        </>
+      ) : status ? (
         <>
           <p>No {STATUS_CONFIG[status].label} leads.</p>
           <Button variant="outline" onClick={onShowAll}>
@@ -55,8 +72,14 @@ function EmptyState({
 export function LeadBoard() {
   const now = useNow();
   const [status, setStatus] = useState<LeadStatus | undefined>(undefined);
+  const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const { data, error, refetch, isPlaceholderData } = useLeads({ status });
+  const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
+  const query = debouncedSearch.trim();
+  const { data, error, refetch, isPlaceholderData } = useLeads({
+    status,
+    q: query,
+  });
 
   const content = (() => {
     if (error && !data) {
@@ -71,7 +94,15 @@ export function LeadBoard() {
         now={now}
         onSelect={(lead) => setSelectedId(lead.id)}
         emptyState={
-          <EmptyState status={status} onShowAll={() => setStatus(undefined)} />
+          <EmptyState
+            status={status}
+            query={query}
+            onShowAll={() => setStatus(undefined)}
+            onClearFilters={() => {
+              setSearch("");
+              setStatus(undefined);
+            }}
+          />
         }
       />
     );
@@ -79,7 +110,10 @@ export function LeadBoard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <StatusFilter selected={status} onChange={setStatus} />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <StatusFilter selected={status} onChange={setStatus} />
+        <SearchInput value={search} onChange={setSearch} />
+      </div>
       <div
         aria-busy={isPlaceholderData}
         className={cn("transition-opacity", isPlaceholderData && "opacity-60")}
