@@ -2,7 +2,11 @@ import { TrendingUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-export function AppHeader() {
+type AppHeaderProps = {
+  onAddLead: () => void;
+};
+
+export function AppHeader({ onAddLead }: AppHeaderProps) {
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex max-w-[1000px] items-center justify-between px-4 py-3">
@@ -10,7 +14,10 @@ export function AppHeader() {
           <TrendingUp aria-hidden className="size-5" />
           <span>LeadFlow</span>
         </div>
-        <Button className="bg-blue-600 text-white hover:bg-blue-700">
+        <Button
+          onClick={onAddLead}
+          className="bg-blue-600 text-white hover:bg-blue-700"
+        >
           + Add New Lead
         </Button>
       </div>
