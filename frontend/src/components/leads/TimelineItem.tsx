@@ -38,7 +38,7 @@ export function TimelineItem({
         <span className="font-medium text-gray-700">
           {formatTimelineStamp(discussion.created_at)}
         </span>{" "}
-        <span className="text-gray-400">
+        <span className="text-gray-600">
           ({timeAgo(discussion.created_at, now)})
         </span>
       </p>
@@ -46,7 +46,7 @@ export function TimelineItem({
         <p
           className={cn(
             "whitespace-pre-wrap",
-            isSystemNote && "text-gray-500 italic",
+            isSystemNote && "text-gray-600 italic",
           )}
         >
           {discussion.note}

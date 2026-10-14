@@ -38,14 +38,19 @@ export function LeadCard({ lead, group, now, onSelect }: LeadCardProps) {
       className={cn(
         "flex w-full flex-col gap-2 rounded-xl border p-4 text-left shadow-sm transition-colors hover:border-gray-300 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none",
         CARD_STYLES[group],
-        isClosed(lead.status) && "opacity-60",
+        isClosed(lead.status) && "border-gray-200 bg-gray-100",
       )}
     >
       <span className="flex w-full items-start justify-between gap-3">
-        <span className="min-w-0 truncate font-semibold text-gray-900">
+        <span
+          className={cn(
+            "min-w-0 truncate font-semibold",
+            isClosed(lead.status) ? "text-gray-700" : "text-gray-900",
+          )}
+        >
           {lead.name}
           {lead.company ? (
-            <span className="ml-1.5 text-sm font-normal text-gray-500">
+            <span className="ml-1.5 text-sm font-normal text-gray-600">
               ({lead.company})
             </span>
           ) : null}
@@ -58,7 +63,7 @@ export function LeadCard({ lead, group, now, onSelect }: LeadCardProps) {
           {lead.last_note}
         </span>
         {lastActivity ? (
-          <span className="shrink-0 text-xs text-gray-400">{lastActivity}</span>
+          <span className="shrink-0 text-xs text-gray-600">{lastActivity}</span>
         ) : null}
       </span>
       {followUpLabel ? (

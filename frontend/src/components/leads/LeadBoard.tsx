@@ -76,7 +76,7 @@ export function LeadBoard() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
   const query = debouncedSearch.trim();
-  const { data, error, refetch, isPlaceholderData } = useLeads({
+  const { data, error, refetch, isPlaceholderData, isFetching } = useLeads({
     status,
     q: query,
   });
@@ -115,7 +115,8 @@ export function LeadBoard() {
         <SearchInput value={search} onChange={setSearch} />
       </div>
       <div
-        aria-busy={isPlaceholderData}
+        aria-live="polite"
+        aria-busy={isFetching}
         className={cn("transition-opacity", isPlaceholderData && "opacity-60")}
       >
         {content}

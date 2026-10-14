@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -60,6 +61,7 @@ export function AddNoteForm({ leadId, now, onSaved }: AddNoteFormProps) {
   const onSubmit = handleSubmit((values) => {
     mutation.mutate(toCreateInput(values), {
       onSuccess: () => {
+        toast.success("Note saved");
         reset(DEFAULT_VALUES);
         onSaved();
         setFocus("note");

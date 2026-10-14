@@ -31,11 +31,11 @@ export function LeadSection({
       <h2
         className={cn(
           "text-xs font-semibold tracking-wider uppercase",
-          group === "overdue" ? "text-red-600" : "text-gray-500",
+          group === "overdue" ? "text-red-700" : "text-gray-600",
         )}
       >
         {icon ? <span aria-hidden>{icon} </span> : null}
-        {title}
+        {title} ({leads.length})
       </h2>
       {leads.length === 0 ? (
         emptyState

@@ -20,7 +20,7 @@ export const STATUS_CONFIG: Record<
     label: "Proposal Sent",
     badgeClass: "bg-purple-100 text-purple-800",
   },
-  won: { label: "Won", badgeClass: "bg-gray-200 text-gray-600" },
+  won: { label: "Won", badgeClass: "bg-gray-200 text-gray-700" },
   lost: { label: "Lost", badgeClass: "bg-red-50 text-red-700" },
 };
 

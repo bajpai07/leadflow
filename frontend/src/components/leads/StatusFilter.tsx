@@ -18,7 +18,7 @@ const OPTIONS: readonly { value: LeadStatus | undefined; label: string }[] = [
 export function StatusFilter({ selected, onChange }: StatusFilterProps) {
   return (
     <div className="flex min-w-0 items-center gap-3 overflow-x-auto pb-1">
-      <span className="shrink-0 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+      <span className="shrink-0 text-xs font-semibold tracking-wider text-gray-600 uppercase">
         Filters:
       </span>
       <div className="flex gap-2">

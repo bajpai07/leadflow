@@ -2,6 +2,7 @@
 
 import { XIcon } from "lucide-react";
 import { useRef } from "react";
+import { toast } from "sonner";
 
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { AddNoteForm } from "@/components/leads/AddNoteForm";
@@ -81,7 +82,11 @@ export function LeadTimelineDialog({
             {lead ? (
               <LeadStatusSelect
                 value={lead.status}
-                onChange={(status) => statusMutation.mutate(status)}
+                onChange={(status) =>
+                  statusMutation.mutate(status, {
+                    onSuccess: () => toast.success("Status updated"),
+                  })
+                }
               />
             ) : null}
             <DialogClose
