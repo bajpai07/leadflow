@@ -19,6 +19,17 @@ export type Lead = {
   updated_at: string;
 };
 
+export type LeadCreateInput = {
+  name: string;
+  company?: string;
+  phone?: string;
+};
+
+export type LeadFilters = {
+  status?: LeadStatus;
+  q?: string;
+};
+
 export type Discussion = {
   id: number;
   lead_id: number;

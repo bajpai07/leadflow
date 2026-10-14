@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ApiError,
   createDiscussion,
+  createLead,
   fetchDiscussions,
   fetchLead,
   fetchLeads,
@@ -51,7 +52,7 @@ describe("fetchLeads", () => {
   it("passes the status filter as a query parameter", async () => {
     fetchMock.mockResolvedValue(jsonResponse([]));
 
-    await fetchLeads("proposal_sent");
+    await fetchLeads({ status: "proposal_sent" });
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       "http://localhost:8000/leads?status=proposal_sent",
@@ -184,5 +185,82 @@ describe("lead and discussion requests", () => {
 
     expect(error.status).toBe(422);
     expect(error.code).toBe("follow_up_in_past");
+  });
+});
+
+describe("fetchLeads filters", () => {
+  async function requestedUrl(filters: Parameters<typeof fetchLeads>[0]) {
+    fetchMock.mockClear();
+    fetchMock.mockResolvedValue(jsonResponse([]));
+    await fetchLeads(filters);
+    return fetchMock.mock.calls[0]?.[0];
+  }
+
+  it("builds a status-only url", async () => {
+    expect(await requestedUrl({ status: "won" })).toBe(
+      "http://localhost:8000/leads?status=won",
+    );
+  });
+
+  it("builds a q-only url with the term trimmed", async () => {
+    expect(await requestedUrl({ q: "  sarah " })).toBe(
+      "http://localhost:8000/leads?q=sarah",
+    );
+  });
+
+  it("builds a url with both status and q", async () => {
+    expect(await requestedUrl({ status: "new", q: "ha" })).toBe(
+      "http://localhost:8000/leads?status=new&q=ha",
+    );
+  });
+
+  it("encodes percent signs and ampersands so they round-trip", async () => {
+    const percent = new URL(String(await requestedUrl({ q: "%" })));
+    expect(percent.searchParams.get("q")).toBe("%");
+    expect(percent.search).toBe("?q=%25");
+
+    const ampersand = new URL(String(await requestedUrl({ q: "a&b" })));
+    expect(ampersand.searchParams.get("q")).toBe("a&b");
+    expect([...ampersand.searchParams.keys()]).toEqual(["q"]);
+  });
+
+  it("round-trips spaces and non-ASCII characters", async () => {
+    const url = new URL(String(await requestedUrl({ q: "Jos\u00e9 M\u00fcller" })));
+    expect(url.searchParams.get("q")).toBe("Jos\u00e9 M\u00fcller");
+  });
+
+  it("omits an empty or whitespace q", async () => {
+    expect(await requestedUrl({ q: "" })).toBe("http://localhost:8000/leads");
+    expect(await requestedUrl({ q: "   " })).toBe("http://localhost:8000/leads");
+  });
+});
+
+describe("createLead", () => {
+  it("posts the lead as JSON", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ id: 9 }, 201));
+
+    await createLead({ name: "Pam Beesly", phone: "555-0188" });
+
+    const [url, init] = fetchMock.mock.calls[0] ?? [];
+    expect(url).toBe("http://localhost:8000/leads");
+    expect(init?.method).toBe("POST");
+    expect(JSON.parse(String(init?.body))).toEqual({
+      name: "Pam Beesly",
+      phone: "555-0188",
+    });
+  });
+
+  it("raises an ApiError for a validation failure", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(
+        { detail: "name: Field required", code: "validation_error" },
+        422,
+      ),
+    );
+
+    const error = await rejection(createLead({ name: "" }));
+
+    expect(error.status).toBe(422);
+    expect(error.code).toBe("validation_error");
   });
 });

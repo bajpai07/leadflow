@@ -3,6 +3,8 @@ import type {
   DiscussionCreateInput,
   DiscussionCreateResult,
   Lead,
+  LeadCreateInput,
+  LeadFilters,
   LeadStatus,
 } from "@/lib/types";
 
@@ -73,9 +75,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function fetchLeads(status?: LeadStatus): Promise<Lead[]> {
-  const query = status ? `?status=${encodeURIComponent(status)}` : "";
-  return request<Lead[]>(`/leads${query}`);
+export function fetchLeads(filters: LeadFilters = {}): Promise<Lead[]> {
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  const q = filters.q?.trim();
+  if (q) params.set("q", q);
+  const query = params.toString();
+  return request<Lead[]>(query ? `/leads?${query}` : "/leads");
+}
+
+export function createLead(input: LeadCreateInput): Promise<Lead> {
+  return request<Lead>("/leads", { method: "POST", body: input });
 }
 
 export function fetchLead(id: number): Promise<Lead> {

@@ -9,6 +9,7 @@ import {
 
 import {
   createDiscussion,
+  createLead,
   fetchDiscussions,
   fetchLead,
   fetchLeads,
@@ -24,14 +25,18 @@ import type {
   DiscussionCreateInput,
   DiscussionCreateResult,
   Lead,
+  LeadFilters,
   LeadStatus,
 } from "@/lib/types";
 
 export const leadKeys = {
   all: ["leads"] as const,
   lists: () => [...leadKeys.all, "list"] as const,
-  list: (status: LeadStatus | null) =>
-    [...leadKeys.lists(), { status }] as const,
+  list: (filters: LeadFilters) =>
+    [
+      ...leadKeys.lists(),
+      { status: filters.status ?? null, q: filters.q?.trim() ?? "" },
+    ] as const,
   detail: (id: number) => [...leadKeys.all, "detail", id] as const,
   discussions: (id: number) =>
     [...leadKeys.detail(id), "discussions"] as const,
@@ -106,11 +111,20 @@ function findCachedLead(
   return undefined;
 }
 
-export function useLeads(status?: LeadStatus) {
+export function useLeads(filters: LeadFilters = {}) {
   return useQuery({
-    queryKey: leadKeys.list(status ?? null),
-    queryFn: () => fetchLeads(status),
+    queryKey: leadKeys.list(filters),
+    queryFn: () => fetchLeads(filters),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useCreateLead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createLead,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: leadKeys.lists() }),
   });
 }
 

@@ -33,10 +33,27 @@ beforeEach(() => {
 
 function seedCaches(lead: Lead) {
   const other = makeLead(2, { status: "won" });
-  queryClient.setQueryData<Lead[]>(leadKeys.list(null), [lead, other]);
-  queryClient.setQueryData<Lead[]>(leadKeys.list("won"), [lead, other]);
+  queryClient.setQueryData<Lead[]>(leadKeys.list({}), [lead, other]);
+  queryClient.setQueryData<Lead[]>(leadKeys.list({ status: "won" }), [lead, other]);
   queryClient.setQueryData<Lead>(leadKeys.detail(lead.id), lead);
 }
+
+describe("query keys", () => {
+  it("differ per status and search term", () => {
+    const keys = [
+      leadKeys.list({}),
+      leadKeys.list({ status: "won" }),
+      leadKeys.list({ q: "sarah" }),
+      leadKeys.list({ status: "won", q: "sarah" }),
+    ].map((key) => JSON.stringify(key));
+
+    expect(new Set(keys).size).toBe(4);
+  });
+
+  it("treat a blank search like no search", () => {
+    expect(leadKeys.list({ q: "  " })).toEqual(leadKeys.list({}));
+  });
+});
 
 describe("optimistic status patch", () => {
   it("updates the detail cache and every list cache", () => {
@@ -46,7 +63,7 @@ describe("optimistic status patch", () => {
     applyStatusPatch(queryClient, 1, "won");
 
     expect(queryClient.getQueryData<Lead>(leadKeys.detail(1))?.status).toBe("won");
-    for (const key of [leadKeys.list(null), leadKeys.list("won")]) {
+    for (const key of [leadKeys.list({}), leadKeys.list({ status: "won" })]) {
       const list = queryClient.getQueryData<Lead[]>(key);
       expect(list?.find((l) => l.id === 1)?.status).toBe("won");
       expect(list?.find((l) => l.id === 2)?.status).toBe("won");
@@ -61,9 +78,32 @@ describe("optimistic status patch", () => {
     restoreStatusSnapshot(queryClient, 1, snapshot);
 
     expect(queryClient.getQueryData<Lead>(leadKeys.detail(1))).toEqual(lead);
-    for (const key of [leadKeys.list(null), leadKeys.list("won")]) {
+    for (const key of [leadKeys.list({}), leadKeys.list({ status: "won" })]) {
       const list = queryClient.getQueryData<Lead[]>(key);
       expect(list?.find((l) => l.id === 1)).toEqual(lead);
+    }
+  });
+});
+
+describe("optimistic status patch with a search cache", () => {
+  it("updates and restores the q=sarah list and the unfiltered list", () => {
+    const lead = makeLead(1, { name: "Sarah Connor" });
+    queryClient.setQueryData<Lead[]>(leadKeys.list({ q: "sarah" }), [lead]);
+    queryClient.setQueryData<Lead[]>(leadKeys.list({}), [lead, makeLead(2)]);
+    queryClient.setQueryData<Lead>(leadKeys.detail(1), lead);
+
+    const snapshot = applyStatusPatch(queryClient, 1, "won");
+
+    for (const key of [leadKeys.list({ q: "sarah" }), leadKeys.list({})]) {
+      const patched = queryClient.getQueryData<Lead[]>(key)?.find((l) => l.id === 1);
+      expect(patched?.status).toBe("won");
+    }
+
+    restoreStatusSnapshot(queryClient, 1, snapshot);
+
+    for (const key of [leadKeys.list({ q: "sarah" }), leadKeys.list({})]) {
+      const restored = queryClient.getQueryData<Lead[]>(key)?.find((l) => l.id === 1);
+      expect(restored).toEqual(lead);
     }
   });
 });
@@ -96,7 +136,7 @@ describe("saved note", () => {
     applySavedNote(queryClient, { discussion, lead: updated });
 
     expect(queryClient.getQueryData<Lead>(leadKeys.detail(1))).toEqual(updated);
-    for (const key of [leadKeys.list(null), leadKeys.list("won")]) {
+    for (const key of [leadKeys.list({}), leadKeys.list({ status: "won" })]) {
       expect(
         queryClient.getQueryData<Lead[]>(key)?.find((l) => l.id === 1),
       ).toEqual(updated);

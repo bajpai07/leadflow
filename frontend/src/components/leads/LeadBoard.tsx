@@ -56,7 +56,7 @@ export function LeadBoard() {
   const now = useNow();
   const [status, setStatus] = useState<LeadStatus | undefined>(undefined);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const { data, error, refetch, isPlaceholderData } = useLeads(status);
+  const { data, error, refetch, isPlaceholderData } = useLeads({ status });
 
   const content = (() => {
     if (error && !data) {
